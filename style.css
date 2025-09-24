@@ -1,0 +1,88 @@
+/* --- Base and Font Setup --- */
+body {
+    font-family: 'Sarabun', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+    background-image: url('https://images.unsplash.com/photo-1554141311-6a4ma5a1931589?q=80&w=2940&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    color: #111827; /* Default text color for light mode */
+}
+.hidden {
+    display: none;
+}
+/* --- Main Layout --- */
+#app-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+#main-content {
+    flex-grow: 1;
+    overflow-y: hidden; /* Prevent double scrollbars */
+    padding: 0.5rem;
+}
+.kanban-board, #calendar-view, #archive-view {
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* --- Glassmorphism Effect --- */
+.glass-container {
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    background-color: rgba(248, 248, 250, 0.8);
+}
+.glass-card {
+     backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    background-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* --- Kanban Board --- */
+.kanban-board {
+    display: flex; gap: 1.5rem; overflow-x: auto;
+    padding: 1rem 1.5rem 2rem 1.5rem;
+    scrollbar-width: none;
+}
+.kanban-board::-webkit-scrollbar { display: none; }
+.kanban-column { width: 320px; flex-shrink: 0; }
+.kanban-tasks-container { min-height: 100px; } /* For drag-drop */
+
+
+/* --- Components --- */
+.task-card { transition: all 0.3s ease; cursor: pointer; border-radius: 0.75rem; }
+.task-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.15); }
+.view-btn.bg-white { background-color: #fff; }
+
+/* --- Modal --- */
+#task-modal { transition: opacity 0.3s ease, transform 0.3s ease; }
+.modal-hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
+.modal-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* --- Calendar --- */
+#calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendar-day { min-height: 120px; }
+.calendar-task { font-size: 0.8rem; padding: 2px 6px; }
+
+/* --- Misc --- */
+.file-link { cursor: pointer; text-decoration: underline; color: #3b82f6; }
+.dark .file-link { color: #60a5fa; }
+.sortable-ghost { opacity: 0.4; background-color: #60a5fa; }
+.sortable-drag { opacity: 0.9; transform: rotate(2deg); }
+
+
+/* --- Dark Mode Styles --- */
+.dark .glass-container { background-color: rgba(10, 10, 15, 0.7); }
+.dark .glass-card { background-color: rgba(30, 35, 48, 0.75); box-shadow: 0 8px 32px 0 rgba(0,0,0, 0.2); }
+.dark body, .dark h1, .dark h2, .dark p, .dark span, .dark button, .dark input, .dark label, .dark div { color: #e5e7eb; }
+.dark #month-year, .dark .kanban-column h2 { color: #9ca3af; }
+.dark input, .dark button, .dark .task-card { border-color: rgba(255,255,255,0.1); }
+.dark .bg-gray-200\/80 { background-color: rgba(55, 65, 81, 0.8) !important; }
+.dark #cancel-button { color: #f3f4f6; }
+.dark .view-btn.dark\:bg-gray-800 { background-color: #1f2937; }
+

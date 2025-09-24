@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarity Task App - All Features</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./style.css" rel="stylesheet">
+    <script>
+        // Dark mode setup
+        if (localStorage.getItem('clarity_theme') === 'dark' || (!('clarity_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors">
+
+    <div class="relative w-screen h-screen">
+        <div class="absolute inset-0 w-full h-full glass-container"></div>
+        
+        <main id="app-layout" class="relative z-10 w-full h-full">
+            <header class="p-6 pb-4 md:p-8 md:pb-4 flex-shrink-0">
+                <div class="flex justify-between items-start">
+                    <div id="date-display">
+                        <h1 class="text-3xl font-bold tracking-tight" id="day-name-date"></h1>
+                        <p class="text-2xl text-gray-500" id="month-year"></p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <input type="text" id="search-box" placeholder="ค้นหา..." class="w-48 px-3 py-2 bg-gray-200/50 dark:bg-gray-700/50 rounded-lg border-none focus:ring-2 focus:ring-blue-500">
+                        <div class="p-1 bg-gray-200/80 dark:bg-gray-700/80 rounded-lg flex gap-1">
+                            <button id="kanban-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">Kanban</button>
+                            <button id="calendar-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">ปฏิทิน</button>
+                            <button id="archive-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">ที่เก็บ</button>
+                        </div>
+                        <button id="theme-toggle" class="w-10 h-10 flex items-center justify-center bg-gray-200/80 dark:bg-gray-700/80 rounded-lg">
+                           <!-- Icons will be injected by JS -->
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div id="main-content" class="px-6">
+                <div id="kanban-board" class="kanban-board"></div>
+                <div id="calendar-view" class="hidden"></div>
+                <div id="archive-view" class="hidden"></div>
+            </div>
+        </main>
+        
+        <button id="add-task-button" class="absolute z-20 bottom-8 right-8 w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </button>
+
+        <div id="task-modal" class="absolute inset-0 z-30 flex flex-col justify-end bg-black bg-opacity-30 modal-hidden">
+            <div id="modal-content" class="glass-card w-full rounded-t-3xl p-6 pt-4 max-h-[90vh] flex flex-col">
+                <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4 flex-shrink-0"></div>
+                <h2 id="modal-title" class="text-2xl font-bold text-center mb-6 flex-shrink-0">สร้าง Task ใหม่</h2>
+                <form id="task-form" class="overflow-y-auto pr-2">
+                    <input type="text" id="task-title" placeholder="ชื่องาน..." class="w-full text-xl p-3 bg-gray-100/70 rounded-lg border-none focus:ring-2 focus:ring-blue-500 mb-4" required>
+                    <div class="mb-4">
+                        <label class="font-medium mb-2 block">สถานะ</label>
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <button type="button" data-status="todo" class="status-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">To Do</button>
+                            <button type="button" data-status="inprogress" class="status-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">In Progress</button>
+                            <button type="button" data-status="done" class="status-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">Done</button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="font-medium mb-2 block">กำหนดเสร็จ</label>
+                        <input type="date" id="task-due-date-picker" class="w-full p-2 bg-gray-100/70 rounded-lg border-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="font-medium mb-2 block">ความสำคัญ</label>
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                           <button type="button" data-priority="low" class="priority-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">ต่ำ</button>
+                            <button type="button" data-priority="medium" class="priority-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">ปานกลาง</button>
+                            <button type="button" data-priority="high" class="priority-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">สูง</button>
+                            <button type="button" data-priority="urgent" class="priority-btn p-2 rounded-lg border-2 border-transparent bg-gray-200/80">ด่วน</button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                         <label class="font-medium mb-2 block">Task ย่อย</label>
+                         <div id="subtask-list" class="space-y-2 mb-2"></div>
+                         <div class="flex gap-2">
+                            <input type="text" id="new-subtask-input" placeholder="เพิ่ม Task ย่อย..." class="w-full p-2 bg-gray-100/70 rounded-lg border-none">
+                            <button type="button" id="add-subtask-btn" class="px-4 bg-blue-500 text-white rounded-lg font-bold">+</button>
+                         </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="font-medium mb-2 block">ไฟล์แนบ</label>
+                        <div id="file-attachment-list" class="space-y-2 mb-2"></div>
+                        <button type="button" id="attach-file-button" class="w-full p-2 bg-gray-200/80 rounded-lg font-semibold">แนบไฟล์...</button>
+                    </div>
+                </form>
+                 <div class="flex gap-4 mt-6 pt-4 border-t border-gray-200/80 dark:border-gray-700/80 flex-shrink-0">
+                    <button type="button" id="archive-task-button" class="p-4 text-gray-500 dark:text-gray-400 font-bold hidden">เก็บ</button>
+                    <button type="button" id="delete-task-button" class="p-4 text-red-500 font-bold hidden">ลบ</button>
+                    <div class="flex-grow"></div>
+                    <button type="button" id="cancel-button" class="w-1/3 p-4 bg-gray-200 rounded-xl font-bold transition-transform active:scale-95">ยกเลิก</button>
+                    <button type="submit" form="task-form" id="submit-task-button" class="w-1/3 p-4 bg-blue-500 text-white rounded-xl font-bold transition-transform active:scale-95">เพิ่ม Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="./renderer.js"></script>
+</body>
+</html>
+

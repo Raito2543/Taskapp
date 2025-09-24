@@ -1,0 +1,34 @@
+{
+  "name": "clarity",
+  "version": "1.0.0",
+  "description": "A modern task management desktop app.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.clarity.app",
+    "productName": "Clarity",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
