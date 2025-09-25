@@ -1,14 +1,12 @@
-// main.js
+// main.js (ฉบับแก้ไขที่ถูกต้อง)
 
 const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, Notification, globalShortcut } = require('electron');
-const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
 const cron = require('node-cron');
 const squirrelStartup = require('electron-squirrel-startup');
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelStartup) {
   app.quit();
 }
@@ -18,12 +16,10 @@ let mainWindow;
 let quickAddWindow;
 let tray;
 
-// Function to show notifications
 function showNotification(title, body) {
   new Notification({ title, body, icon: path.join(__dirname, 'icon.png') }).show();
 }
 
-// --- สร้างหน้าต่างหลัก ---
 const createMainWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -44,7 +40,6 @@ const createMainWindow = () => {
   });
 };
 
-// --- สร้างหน้าต่าง Quick Add ---
 const createQuickAddWindow = () => {
     quickAddWindow = new BrowserWindow({
         width: 500,
@@ -101,21 +96,16 @@ app.whenReady().then(() => {
       quickAddWindow.show();
   });
 
-
-  createTray();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow();
     }
   });
 
-  // Set app to launch on startup
   app.setLoginItemSettings({
     openAtLogin: true
   });
 
-  // Startup Notification
   const tasks = store.get('tasks', []);
   const today = new Date().toISOString().split('T')[0];
   const upcomingTasks = tasks.filter(t => !t.isArchived && t.status !== 'done' && t.dueDate >= today);
@@ -150,14 +140,6 @@ cron.schedule('0 17 * * *', () => {
     const completedToday = tasks.filter(t => t.status === 'done' && t.dueDate === today); 
   
     if (completedToday.length > 0) {
-// Scheduled Task Summary Notification at 5 PM
-cron.schedule('0 17 * * *', () => {
-    const tasks = store.get('tasks', []);
-    const today = new Date().toISOString().split('T')[0];
-    const completedToday = tasks.filter(t => t.status === 'done' && t.dueDate === today); // Simple check for now
-  
-    if (completedToday.length > 0) {
-      // Basic summary. This is where Gemini API would be integrated.
       const summary = `วันนี้คุณทำงานเสร็จไป ${completedToday.length} อย่าง: ${completedToday.map(t => t.title).join(', ')}`;
       showNotification('สรุปงานประจำวัน', summary);
     } else {
@@ -170,17 +152,16 @@ cron.schedule('0 17 * * *', () => {
 
 
 // --- IPC Handlers ---
-
 ipcMain.on('close-quick-add-window', () => {
     if (quickAddWindow) {
         quickAddWindow.hide();
     }
 });
 
-// IPC Handlers (No changes here)
 ipcMain.handle('get-tasks', async () => {
     return store.get('tasks', []);
 });
+
 ipcMain.handle('save-tasks', async (event, tasks) => {
     store.set('tasks', tasks);
 });
@@ -213,7 +194,6 @@ ipcMain.handle('quick-add-task', (event, title) => {
     return newTask;
 });
 
-
 ipcMain.handle('dialog:openFile', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile']
@@ -238,12 +218,14 @@ ipcMain.handle('dialog:openFile', async () => {
     return null;
   }
 });
+
 ipcMain.handle('open-file', (event, filePath) => {
     shell.openPath(filePath).catch(err => {
         console.error("Failed to open file:", err);
         dialog.showErrorBox('File Error', 'Could not open the specified file.');
     });
 });
+
 ipcMain.handle('delete-file', async (event, filePath) => {
   try {
     if (fs.existsSync(filePath)) {
@@ -256,5 +238,3 @@ ipcMain.handle('delete-file', async (event, filePath) => {
     return false;
   }
 });
-});
-

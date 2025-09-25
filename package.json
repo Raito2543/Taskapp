@@ -1,11 +1,12 @@
 {
   "name": "clarity",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "A modern task management desktop app.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "publish": "electron-builder --publish always"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,13 @@
   "build": {
     "appId": "com.clarity.app",
     "productName": "Clarity",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Raito2543",
+        "repo": "Taskapp"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "icon.png"
