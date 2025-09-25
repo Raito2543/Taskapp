@@ -1,6 +1,7 @@
 // main.js
 
 const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, Notification, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -101,16 +102,20 @@ app.whenReady().then(() => {
   });
 
 
+  createTray();
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow();
     }
   });
 
+  // Set app to launch on startup
   app.setLoginItemSettings({
     openAtLogin: true
   });
 
+  // Startup Notification
   const tasks = store.get('tasks', []);
   const today = new Date().toISOString().split('T')[0];
   const upcomingTasks = tasks.filter(t => !t.isArchived && t.status !== 'done' && t.dueDate >= today);
@@ -145,6 +150,14 @@ cron.schedule('0 17 * * *', () => {
     const completedToday = tasks.filter(t => t.status === 'done' && t.dueDate === today); 
   
     if (completedToday.length > 0) {
+// Scheduled Task Summary Notification at 5 PM
+cron.schedule('0 17 * * *', () => {
+    const tasks = store.get('tasks', []);
+    const today = new Date().toISOString().split('T')[0];
+    const completedToday = tasks.filter(t => t.status === 'done' && t.dueDate === today); // Simple check for now
+  
+    if (completedToday.length > 0) {
+      // Basic summary. This is where Gemini API would be integrated.
       const summary = `วันนี้คุณทำงานเสร็จไป ${completedToday.length} อย่าง: ${completedToday.map(t => t.title).join(', ')}`;
       showNotification('สรุปงานประจำวัน', summary);
     } else {
@@ -164,6 +177,7 @@ ipcMain.on('close-quick-add-window', () => {
     }
 });
 
+// IPC Handlers (No changes here)
 ipcMain.handle('get-tasks', async () => {
     return store.get('tasks', []);
 });
@@ -242,3 +256,5 @@ ipcMain.handle('delete-file', async (event, filePath) => {
     return false;
   }
 });
+});
+
