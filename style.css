@@ -1,88 +1,205 @@
-/* --- Base and Font Setup --- */
+/* --- Base Styles --- */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+
+:root {
+    --bg-glass: rgba(248, 248, 250, 0.8);
+    --bg-card: rgba(255, 255, 255, 0.75);
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --shadow-color: rgba(31, 38, 135, 0.1);
+}
+
+html.dark {
+    --bg-glass: rgba(10, 10, 15, 0.7);
+    --bg-card: rgba(30, 35, 48, 0.75);
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --shadow-color: rgba(0,0,0, 0.2);
+}
+
 body {
-    font-family: 'Sarabun', 'Inter', sans-serif;
+    font-family: 'Sarabun', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    touch-action: manipulation;
-    background-image: url('https://images.unsplash.com/photo-1554141311-6a4ma5a1931589?q=80&w=2940&auto=format&fit=crop');
+    background-image: url('https://images.unsplash.com/photo-1554141311-6a4ma5a1931589?q=80&w=2940&auto-format&fit=crop');
     background-size: cover;
     background-position: center;
     overflow: hidden;
-    color: #111827; /* Default text color for light mode */
+    color: var(--text-primary);
 }
-.hidden {
-    display: none;
+
+* {
+    box-sizing: border-box;
 }
-/* --- Main Layout --- */
-#app-layout {
+
+
+/*
+ * --- (โค้ดแก้ไขที่สำคัญที่สุด) ---
+ * โค้ดชุดนี้จะบังคับให้ Layout ทำงานถูกต้อง
+ */
+main#app-layout {
     display: flex;
     flex-direction: column;
     height: 100vh;
 }
+
 #main-content {
-    flex-grow: 1;
-    overflow-y: hidden; /* Prevent double scrollbars */
-    padding: 0.5rem;
-}
-.kanban-board, #calendar-view, #archive-view {
-    height: 100%;
-    overflow-y: auto;
+    flex: 1; /* บังคับให้ขยายเต็มพื้นที่ที่เหลือ */
+    min-height: 0; /* คำสั่งสำคัญมากสำหรับ Flexbox เพื่อให้ Scrollbar ทำงาน */
+    display: flex;
+    flex-direction: column;
 }
 
-/* --- Glassmorphism Effect --- */
+#main-content > div { /* Target a direct child div (our views) */
+    flex: 1; /* บังคับให้ View ที่เปิดอยู่ ขยายเต็ม #main-content */
+    min-height: 0; /* คำสั่งสำคัญสำหรับ Flexbox อีกเช่นกัน */
+}
+/* --------------------------------- */
+
+
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-30 { z-index: 30; }
+.-z-10 { z-index: -10; }
+.hidden { display: none !important; }
+
+/* --- Glassmorphism --- */
 .glass-container {
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    background-color: rgba(248, 248, 250, 0.8);
+    background-color: var(--bg-glass);
 }
 .glass-card {
-     backdrop-filter: blur(30px) saturate(150%);
+    backdrop-filter: blur(30px) saturate(150%);
     -webkit-backdrop-filter: blur(30px) saturate(150%);
-    background-color: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--bg-card);
+    box-shadow: 0 8px 32px 0 var(--shadow-color);
+    transition: all 0.3s ease;
 }
 
 /* --- Kanban Board --- */
 .kanban-board {
-    display: flex; gap: 1.5rem; overflow-x: auto;
-    padding: 1rem 1.5rem 2rem 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
     scrollbar-width: none;
 }
 .kanban-board::-webkit-scrollbar { display: none; }
-.kanban-column { width: 320px; flex-shrink: 0; }
-.kanban-tasks-container { min-height: 100px; } /* For drag-drop */
+.kanban-column {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+.kanban-tasks-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+}
 
+/* --- Drag & Drop Styles --- */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #c7d2fe;
+}
+.sortable-drag {
+    opacity: 1 !important;
+    transform: rotate(3deg);
+    box-shadow: 0 16px 40px 0 var(--shadow-color);
+    cursor: grabbing;
+}
 
-/* --- Components --- */
-.task-card { transition: all 0.3s ease; cursor: pointer; border-radius: 0.75rem; }
-.task-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.15); }
-.view-btn.bg-white { background-color: #fff; }
+/* --- Dashboard --- */
+.stat-card {
+    background-color: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
+}
+.stat-card h3 {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+.stat-card p {
+    color: var(--text-primary);
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+.chart-container {
+    background-color: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
+    min-height: 350px;
+    position: relative;
+}
+
+/* --- Calendar & Other Views --- */
+#calendar-view, #archive-view, #dashboard-view {
+    overflow-y: auto;
+}
+
+.calendar-day {
+    min-height: 120px;
+}
+.calendar-task {
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+/* --- Task Card --- */
+.task-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px 0 var(--shadow-color);
+}
+.task-card.done .task-title {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
 
 /* --- Modal --- */
-#task-modal { transition: opacity 0.3s ease, transform 0.3s ease; }
-.modal-hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
-.modal-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#task-modal {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#task-modal.modal-hidden {
+    opacity: 0;
+    transform: translateY(100%);
+    pointer-events: none;
+}
+#task-modal.modal-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
 
-/* --- Calendar --- */
-#calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.calendar-day { min-height: 120px; }
-.calendar-task { font-size: 0.8rem; padding: 2px 6px; }
-
-/* --- Misc --- */
-.file-link { cursor: pointer; text-decoration: underline; color: #3b82f6; }
+/* File link style */
+.file-link {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #3b82f6;
+}
+.file-link:hover { color: #2563eb; }
 .dark .file-link { color: #60a5fa; }
-.sortable-ghost { opacity: 0.4; background-color: #60a5fa; }
-.sortable-drag { opacity: 0.9; transform: rotate(2deg); }
+.dark .file-link:hover { color: #93c5fd; }
+#kanban-container {
+    display: flex;
+    justify-content: flex-start; /* จัดชิดซ้ายเป็นหลัก แต่ถ้าเนื้อหาน้อยกว่าจอ จะดูเหมือนอยู่กลางเพราะ padding ของ .kanban-board */
+    align-items: flex-start;
+    overflow-x: auto; /* ให้ scroll แนวนอนที่นี่ */
+    scrollbar-width: none; /* ซ่อน scrollbar */
+}
+#kanban-container::-webkit-scrollbar { 
+    display: none;  /* ซ่อน scrollbar สำหรับ Chrome/Safari */
+}
 
-
-/* --- Dark Mode Styles --- */
-.dark .glass-container { background-color: rgba(10, 10, 15, 0.7); }
-.dark .glass-card { background-color: rgba(30, 35, 48, 0.75); box-shadow: 0 8px 32px 0 rgba(0,0,0, 0.2); }
-.dark body, .dark h1, .dark h2, .dark p, .dark span, .dark button, .dark input, .dark label, .dark div { color: #e5e7eb; }
-.dark #month-year, .dark .kanban-column h2 { color: #9ca3af; }
-.dark input, .dark button, .dark .task-card { border-color: rgba(255,255,255,0.1); }
-.dark .bg-gray-200\/80 { background-color: rgba(55, 65, 81, 0.8) !important; }
-.dark #cancel-button { color: #f3f4f6; }
-.dark .view-btn.dark\:bg-gray-800 { background-color: #1f2937; }
-
+/* บอร์ดเดิม: ทำหน้าที่แค่จัดเรียงคอลัมน์ ไม่ต้อง scroll เองแล้ว */
+.kanban-board {
+    display: inline-flex; /* เปลี่ยนเป็น inline-flex เพื่อให้ความกว้างเท่ากับเนื้อหา */
+    overflow-x: visible; /* ปิดการ scroll ที่ตัวบอร์ดเอง */
+    padding: 0 2rem; /* เพิ่มช่องว่างซ้ายขวาให้บอร์ดไม่ติดขอบ */
+    margin: 0 auto; /* ทำให้เนื้อหาอยู่ตรงกลางถ้าไม่ล้นจอ */
+}

@@ -6,6 +6,7 @@
     <title>Clarity Task App - All Features</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="./style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Dark mode setup
         if (localStorage.getItem('clarity_theme') === 'dark' || (!('clarity_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -30,19 +31,46 @@
                     <div class="flex items-center gap-4">
                         <input type="text" id="search-box" placeholder="ค้นหา..." class="w-48 px-3 py-2 bg-gray-200/50 dark:bg-gray-700/50 rounded-lg border-none focus:ring-2 focus:ring-blue-500">
                         <div class="p-1 bg-gray-200/80 dark:bg-gray-700/80 rounded-lg flex gap-1">
+                            <button id="dashboard-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">Dashboard</button>
                             <button id="kanban-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">Kanban</button>
                             <button id="calendar-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">ปฏิทิน</button>
                             <button id="archive-view-btn" class="view-btn px-3 py-1 rounded-md text-sm font-semibold">ที่เก็บ</button>
                         </div>
                         <button id="theme-toggle" class="w-10 h-10 flex items-center justify-center bg-gray-200/80 dark:bg-gray-700/80 rounded-lg">
-                           <!-- Icons will be injected by JS -->
-                        </button>
+                           </button>
                     </div>
                 </div>
             </header>
 
-            <div id="main-content" class="px-6">
+            <div id="main-content" class="px-6 pb-6 flex-col flex-grow overflow-hidden">
+                <div id="dashboard-view" class="hidden h-full overflow-y-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="stat-card">
+                            <h3>เสร็จวันนี้</h3>
+                            <p id="stat-completed-today">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>จะถึงกำหนดใน 7 วัน</h3>
+                            <p id="stat-due-week">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>เลยกำหนด</h3>
+                            <p id="stat-overdue">0</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3 chart-container">
+                            <canvas id="tasks-by-status-chart"></canvas>
+                        </div>
+                        <div class="lg:col-span-2 chart-container">
+                            <canvas id="tasks-by-priority-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="kanban-container" class="hidden">
                 <div id="kanban-board" class="kanban-board"></div>
+                </div>
                 <div id="calendar-view" class="hidden"></div>
                 <div id="archive-view" class="hidden"></div>
             </div>
@@ -108,4 +136,3 @@
     <script src="./renderer.js"></script>
 </body>
 </html>
-

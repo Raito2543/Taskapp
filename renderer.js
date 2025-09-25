@@ -3,9 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let tasks = [];
     let editingTaskId = null, currentTaskFiles = [], currentTaskSubtasks = [];
     let selectedPriority = 'medium', selectedStatus = 'todo';
-    let currentView = 'kanban';
+    let currentView = 'dashboard';
     let searchQuery = '';
     let currentDate = new Date();
+    let priorityChart = null;
+    let statusChart = null;
 
     const saveTasks = async () => {
         await window.electronAPI.saveTasks(tasks);
@@ -28,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kanbanBoard = document.getElementById('kanban-board');
     const calendarView = document.getElementById('calendar-view');
     const archiveView = document.getElementById('archive-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const kanbanContainer = document.getElementById('kanban-container');
     const viewBtns = document.querySelectorAll('.view-btn');
     const searchBox = document.getElementById('search-box');
     const taskModal = document.getElementById('task-modal');
@@ -85,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RENDERING ---
     const render = () => {
-        // Update view buttons
+        // (แก้ไข) คืนโค้ดจัดการ Active Button เป็นแบบเดิม
         viewBtns.forEach(btn => {
             const isBtnActive = btn.id.startsWith(currentView);
             btn.classList.toggle('bg-white', isBtnActive);
@@ -93,23 +97,115 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.toggle('shadow', isBtnActive);
         });
 
-        // Toggle view containers
-        kanbanBoard.classList.toggle('hidden', currentView !== 'kanban');
+        dashboardView.classList.toggle('hidden', currentView !== 'dashboard');
+        kanbanContainer.classList.toggle('hidden', currentView !== 'kanban');
         calendarView.classList.toggle('hidden', currentView !== 'calendar');
         archiveView.classList.toggle('hidden', currentView !== 'archive');
 
-        // Render the active view
-        if (currentView === 'kanban') renderKanban();
+        if (currentView === 'dashboard') renderDashboard();
+        else if (currentView === 'kanban') renderKanban();
         else if (currentView === 'calendar') renderCalendar();
         else if (currentView === 'archive') renderArchive();
     };
-
+    
     const getFilteredTasks = () => {
         return tasks.filter(task =>
             !task.isArchived &&
             task.title.toLowerCase().includes(searchQuery.toLowerCase())
         );
     };
+    
+    const renderDashboard = () => {
+        const activeTasks = tasks.filter(task => !task.isArchived);
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        const completedToday = activeTasks.filter(t => t.status === 'done' && t.dueDate === todayStr).length;
+        
+        const next7Days = new Date();
+        next7Days.setDate(today.getDate() + 7);
+        const dueThisWeek = activeTasks.filter(t => {
+            if (!t.dueDate || t.status === 'done') return false;
+            const dueDate = new Date(t.dueDate);
+            return dueDate >= today && dueDate <= next7Days;
+        }).length;
+
+        const overdue = activeTasks.filter(t => {
+            if (!t.dueDate || t.status === 'done') return false;
+            return new Date(t.dueDate) < new Date(todayStr);
+        }).length;
+
+        document.getElementById('stat-completed-today').textContent = completedToday;
+        document.getElementById('stat-due-week').textContent = dueThisWeek;
+        document.getElementById('stat-overdue').textContent = overdue;
+
+        const priorities = { urgent: 0, high: 0, medium: 0, low: 0 };
+        const statuses = { todo: 0, inprogress: 0, done: 0 };
+
+        activeTasks.forEach(task => {
+            if (priorities[task.priority] !== undefined) priorities[task.priority]++;
+            if (statuses[task.status] !== undefined) statuses[task.status]++;
+        });
+
+        if(priorityChart) priorityChart.destroy();
+        if(statusChart) statusChart.destroy();
+        
+        drawPriorityChart(priorities);
+        drawStatusChart(statuses);
+    };
+
+    const drawPriorityChart = (data) => {
+        const ctx = document.getElementById('tasks-by-priority-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        priorityChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['ด่วน', 'สูง', 'ปานกลาง', 'ต่ำ'],
+                datasets: [{
+                    label: 'Tasks by Priority',
+                    data: [data.urgent, data.high, data.medium, data.low],
+                    backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#6b7280'],
+                    borderColor: isDark ? '#1e2330' : '#ffffff',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: isDark ? '#e5e7eb' : '#1f2937' } },
+                    title: { display: true, text: 'สัดส่วนงานตามความสำคัญ', color: isDark ? '#e5e7eb' : '#1f2937', font: { size: 16, family: 'Sarabun' } }
+                }
+            }
+        });
+    };
+
+    const drawStatusChart = (data) => {
+        const ctx = document.getElementById('tasks-by-status-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        statusChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['สิ่งที่ต้องทำ', 'กำลังทำ', 'เสร็จแล้ว'],
+                datasets: [{
+                    label: 'จำนวนงาน',
+                    data: [data.todo, data.inprogress, data.done],
+                    backgroundColor: ['#a0aec0', '#f59e0b', '#22c55e'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: isDark ? '#9ca3af' : '#6b7280', stepSize: 1 } },
+                    x: { ticks: { color: isDark ? '#9ca3af' : '#6b7280' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'ภาพรวมสถานะงานทั้งหมด', color: isDark ? '#e5e7eb' : '#1f2937', font: { size: 16, family: 'Sarabun' } }
+                }
+            }
+        });
+    }
 
     const renderKanban = () => {
         kanbanBoard.innerHTML = '';
@@ -146,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         for(let i = 0; i < firstDay; i++) gridHTML += `<div class="border rounded-lg dark:border-gray-700"></div>`;
         
         for(let day = 1; day <= daysInMonth; day++) {
-            // FIX: Manually format date to YYYY-MM-DD to avoid timezone issues
             const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -203,12 +298,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const createTaskCard = (task) => {
         const taskCard = document.createElement('div');
         taskCard.className = `task-card glass-card rounded-xl p-4 space-y-3`;
+        if (task.status === 'done') {
+    taskCard.classList.add('done');
+        }
         taskCard.dataset.id = task.id;
         const priorityClasses = {
-            low:    { bg: 'bg-gray-100 dark:bg-gray-600',      text: 'text-gray-700 dark:text-gray-100' },
-            medium: { bg: 'bg-blue-100 dark:bg-blue-800',       text: 'text-blue-700 dark:text-blue-100' },
-            high:   { bg: 'bg-orange-100 dark:bg-orange-800',   text: 'text-orange-700 dark:text-orange-100' },
-            urgent: { bg: 'bg-red-100 dark:bg-red-800',         text: 'text-red-700 dark:text-red-100' }
+            low:    { bg: 'bg-gray-100 dark:bg-gray-600', text: 'text-gray-700 dark:text-gray-100' },
+            medium: { bg: 'bg-blue-100 dark:bg-blue-800', text: 'text-blue-700 dark:text-blue-100' },
+            high:   { bg: 'bg-orange-100 dark:bg-orange-800', text: 'text-orange-700 dark:text-orange-100' },
+            urgent: { bg: 'bg-red-100 dark:bg-red-800', text: 'text-red-700 dark:text-red-100' }
         }[task.priority] || {bg: 'bg-gray-100', text: 'text-gray-700'};
         const formattedDueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
         const subtaskProgress = task.subtasks && task.subtasks.length > 0 ? `<div class="flex items-center gap-1 text-sm text-gray-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h4a1 1 0 100-2H7zm0 4a1 1 0 100 2h4a1 1 0 100-2H7z" clip-rule="evenodd" /></svg><span>${task.subtasks.filter(st => st.done).length}/${task.subtasks.length}</span></div>` : '';
@@ -232,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return taskCard;
     };
 
-    // --- MODAL & FORM LOGIC ---
     const showModal = (taskId = null) => {
         resetForm();
         editingTaskId = taskId;
@@ -318,12 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- EVENT LISTENERS ---
-    viewBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentView = btn.id.replace('-view-btn', '');
-            render();
-        });
-    });
+    viewBtns.forEach(btn => btn.addEventListener('click', () => {
+        currentView = btn.id.replace('-view-btn', '');
+        render();
+    }));
     
     searchBox.addEventListener('input', (e) => {
         searchQuery = e.target.value;
@@ -333,11 +428,12 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggle.addEventListener('click', () => {
         document.documentElement.classList.toggle('dark');
         updateTheme();
+        render();
     });
     
     addTaskButton.addEventListener('click', () => showModal());
     
-    document.getElementById('app-layout').addEventListener('click', e => {
+    document.getElementById('main-content').addEventListener('click', e => {
         const taskCard = e.target.closest('.task-card');
         if (taskCard) {
             showModal(parseInt(taskCard.dataset.id));
@@ -493,8 +589,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDate();
         updateTheme();
         render();
+
+        window.electronAPI.onTasksUpdated(async () => {
+            await loadTasks();
+            render();
+        });
     }
     
     init();
 });
-
